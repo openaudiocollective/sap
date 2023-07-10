@@ -1,6 +1,6 @@
 # sap
 
-Package sap provides SAP (Session Announcement Protocol) parsing compliant with RFC 2974
+Package sap provides SAP (Session Announcement Protocol) parsing compliant with [RFC 2974](https://datatracker.ietf.org/doc/html/rfc2974)
 
 _This package is still experimental, breaking changes can happen._
 

@@ -34,7 +34,7 @@ func TestValidateMsgIdHash(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := ComputeMsgIdHash(&tc.payload)
+			got := ComputeMsgIdHash(tc.payload)
 			if tc.want != got {
 				t.Errorf("expected %d, got %d", tc.want, got)
 			}
