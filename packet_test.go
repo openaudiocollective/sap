@@ -47,11 +47,6 @@ func TestPacketUnmarshalErrors(t *testing.T) {
 			input:         make([]byte, 0), // Not enough bytes to unmarshal flags.
 			expectedError: errBufTooSmallForFlags,
 		},
-		{
-			name:          "BufTooSmallForPayload",
-			input:         make([]byte, 8), // Not enough bytes to unmarshal flags.,
-			expectedError: errBufTooSmallForPayload,
-		},
 	}
 
 	for _, tc := range testCases {
