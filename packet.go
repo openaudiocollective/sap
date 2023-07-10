@@ -43,12 +43,18 @@ func (p Packet) Marshal() (buf []byte, err error) {
 }
 
 // MarshalTo serializes the packet and writes to the buffer.
-// It returns the number of bytes read n and any error.
+// It returns the number of bytes read and any error.
 func (p Packet) MarshalTo(buf []byte) (n int, err error) {
 	headerSize := p.Header.MarshalSize()
 	if len(buf) < headerSize {
 		return 0, errBufTooSmallForHeader
 	}
+
+	// Add the hash to the Header if it doesn't have one
+	if p.Header.MessageIDHash == 0 {
+		p.Header.MessageIDHash = ComputeMsgIdHash(&p.Payload)
+	}
+
 	n, err = p.Header.MarshalTo(buf)
 	if err != nil {
 		return 0, err
@@ -81,7 +87,8 @@ func (p *Packet) Unmarshal(buf []byte) error {
 	if len(buf) > headerSize { // only slice if needed
 		p.Payload = buf[headerSize:end]
 	} else {
-		return errBufTooSmallForPayload
+		// no payload
+		return nil
 	}
 	return nil
 }
