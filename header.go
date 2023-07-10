@@ -65,6 +65,7 @@ type Header struct {
 	PayloadType string
 }
 
+// If this is an announcement or deletion packet
 type MessageType uint8
 
 const (
@@ -72,11 +73,12 @@ const (
 	Deletion     MessageType = 1
 )
 
+// If the origination source is from an IPv4 or IPv6 address
 type AddressType uint8
 
 const (
 	IPv4 AddressType = 0
-	IPv6 AddressType = 0
+	IPv6 AddressType = 1
 )
 
 const (
