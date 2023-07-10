@@ -16,28 +16,28 @@ func TestHeaderMarshalSize(t *testing.T) {
 		{
 			name:       "Test 1: Everything Default",
 			mockHeader: CreateMockHeader(Header{}),
-			want:       9,
+			want:       8,
 		},
 		{
 			name: "Test 2: IPv6",
 			mockHeader: CreateMockHeader(Header{
 				AddressType: 1,
 			}),
-			want: 21,
+			want: 20,
 		},
 		{
 			name: "Test 3: AuthenticationLength = 1",
 			mockHeader: CreateMockHeader(Header{
 				AuthenticationLength: 1,
 			}),
-			want: 13,
+			want: 12,
 		},
 		{
 			name: "Test 4: AuthenticationLength = 5",
 			mockHeader: CreateMockHeader(Header{
 				AuthenticationLength: 5,
 			}),
-			want: 29,
+			want: 28,
 		},
 		{
 			name: "Test 5: IPv6 and AuthenticationLength = 5",
@@ -45,7 +45,7 @@ func TestHeaderMarshalSize(t *testing.T) {
 				AddressType:          1,
 				AuthenticationLength: 5,
 			}),
-			want: 41,
+			want: 40,
 		},
 		{
 			name: "Test 6: Payload Type application/sdp",
@@ -95,35 +95,24 @@ func TestHeaderUnmarshalErrors(t *testing.T) {
 		{
 			name: "BufTooSmallForForIPv6",
 			// The address type bit is set to 1 and this byte slice has 16 bytes which is not enough for IPv6 address
-			input:         []byte{0x10, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+			input:         []byte{0x30, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 			expectedError: errBufTooSmallForIPv6,
 		},
 		{
 			name:          "BufTooSmallForAuthDataWithIPv4",
-			input:         []byte{0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+			input:         []byte{0x20, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 			expectedError: errBufTooSmallForAuthData,
 		},
 		{
 			name: "BufTooSmallForAuthDataWithIPv6",
 			// The address type bit is set to 1 and this byte slice has 20 bytes which is enough for IPv6 address but not to AuthData
-			input:         []byte{0x10, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+			input:         []byte{0x30, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 			expectedError: errBufTooSmallForAuthData,
-		},
-		{
-			name:          "BufTooSmallForPayloadType",
-			input:         make([]byte, 8),
-			expectedError: errBufTooSmallForPayloadType,
-		},
-		{
-			name: "NoTrailingByteFound",
-			// There's only one byte after the AuthenticationData and it's not 0 (the trailing byte)
-			input:         []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
-			expectedError: errNoTrailingByteFound,
 		},
 		{
 			name: "NoTrailingByteFound",
 			// There's more than one byte after the AuthenticationData and but none is 0 (the trailing byte)
-			input:         []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01},
+			input:         []byte{0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01},
 			expectedError: errNoTrailingByteFound,
 		},
 	}
@@ -178,6 +167,12 @@ func TestHeaderMarshalAndUnmarshal(t *testing.T) {
 			name: "Test 6: Payload Type application/sdp",
 			mockHeader: CreateMockHeader(Header{
 				PayloadType: "application/sdp",
+			}),
+		},
+		{
+			name: "Test 7: Payload Type application/json",
+			mockHeader: CreateMockHeader(Header{
+				PayloadType: "application/json",
 			}),
 		},
 	}

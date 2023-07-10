@@ -71,17 +71,17 @@ func (p Packet) MarshalSize() int {
 
 // Unmarshal parses the passed byte slice and stores the result in the Packet.
 func (p *Packet) Unmarshal(buf []byte) error {
-	headerSize := p.Header.MarshalSize()
 	err := p.Header.Unmarshal(buf)
 	if err != nil {
 		return err
 	}
 
+	headerSize := p.Header.MarshalSize()
 	end := len(buf)
 	if len(buf) > headerSize { // only slice if needed
 		p.Payload = buf[headerSize:end]
 	} else {
-		p.Payload = nil
+		return errBufTooSmallForPayload
 	}
 	return nil
 }

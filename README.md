@@ -1,6 +1,6 @@
 # sap
 
-Package sap provides SAP (Session Announcement Protocol) parsing
+Package sap provides SAP (Session Announcement Protocol) parsing compliant with RFC 2974
 
 _This package is still experimental, breaking changes can happen._
 
@@ -14,5 +14,3 @@ Head to the [documentation page](https://pkg.go.dev/github.com/openaudiocollecti
 - Encryption/Decryption
 - Compression
 - Authentication
-- Wrap net.WriteUDP to create a high-level API to send SAP packets
-- [Timed Annoucements](https://datatracker.ietf.org/doc/html/rfc2974#section-3.1)
