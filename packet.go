@@ -52,7 +52,7 @@ func (p Packet) MarshalTo(buf []byte) (n int, err error) {
 
 	// Add the hash to the Header if it doesn't have one
 	if p.Header.MessageIDHash == 0 {
-		p.Header.MessageIDHash = ComputeMsgIdHash(&p.Payload)
+		p.Header.MessageIDHash = ComputeMsgIdHash(p.Payload)
 	}
 
 	n, err = p.Header.MarshalTo(buf)
