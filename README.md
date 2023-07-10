@@ -10,7 +10,6 @@ Head to the [documentation page](https://pkg.go.dev/github.com/openaudiocollecti
 
 ## TODO
 
-- Unique Message Identifier Hash
 - Encryption/Decryption
 - Compression
 - Authentication
