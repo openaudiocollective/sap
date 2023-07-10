@@ -4,12 +4,14 @@ import "net"
 
 type Option func(*Header)
 
+// Set the MessageType of the Header struct
 func WithMessageType(msgType MessageType) Option {
 	return func(h *Header) {
 		h.MessageType = msgType
 	}
 }
 
+// Set the PayloadType of the Header struct
 func WithPayloadType(payloadType string) Option {
 	return func(h *Header) {
 		h.PayloadType = payloadType
