@@ -14,14 +14,14 @@ type Header struct {
 
 	// If the A bit is 0, the originating source field contains a 32-bit IPv4 address.
 	// If the A bit is 1, the originating source contains a 128-bit IPv6 address.
-	AddressType uint8
+	AddressType AddressType
 
 	// SAP announcers MUST set this to 0, SAP listeners MUST ignore the contents of this field.
 	Reserved uint8
 
 	// If this bit is set to 0 this is a session announcement packet
 	// If this bit is set to 1 this is a session deletion packet.
-	MessageType uint8
+	MessageType MessageType
 
 	// If the encryption bit is set to 1, the payload of the SAP packet is encrypted.
 	// If this bit is 0 the packet is not encrypted.
@@ -64,6 +64,20 @@ type Header struct {
 	// Technically, it is part of the Payload, but makes more sense to parse it with the rest of the header
 	PayloadType string
 }
+
+type MessageType uint8
+
+const (
+	Announcement MessageType = 0
+	Deletion     MessageType = 1
+)
+
+type AddressType uint8
+
+const (
+	IPv4 AddressType = 0
+	IPv6 AddressType = 0
+)
 
 const (
 	versionShift     = 5    // Number of bits to shift for the version bit
@@ -143,13 +157,13 @@ func (h *Header) Unmarshal(buf []byte) error {
 	h.Version = (buf[currentPosition] >> versionShift) & oneBitMask
 
 	// The fourth bit is the address type bit
-	h.AddressType = (buf[currentPosition] >> addressShift) & oneBitMask
+	h.AddressType = AddressType(buf[currentPosition]>>addressShift) & oneBitMask
 
 	// The fifth bit is the reserved bit
 	h.Reserved = (buf[currentPosition] >> reservedShift) & oneBitMask
 
 	// The sixth bit is the message type bit
-	h.MessageType = (buf[currentPosition] >> messageTypeShift) & oneBitMask
+	h.MessageType = MessageType(buf[currentPosition]>>messageTypeShift) & oneBitMask
 
 	// The seventh bit is the encrypted bit
 	h.Encrypted = (buf[currentPosition] >> encryptedShift) & oneBitMask
@@ -288,13 +302,13 @@ func (h Header) MarshalTo(buf []byte) (n int, err error) {
 	buf[currentPosition] = (h.Version << versionShift)
 
 	// The fourth bit is the address type bit
-	buf[currentPosition] |= (h.AddressType << addressShift)
+	buf[currentPosition] |= byte((h.AddressType << addressShift))
 
 	// The fifth bit is the reserved bit
 	buf[currentPosition] |= (h.Reserved << reservedShift)
 
 	// The sixth bit is the message type bit
-	buf[currentPosition] |= (h.MessageType << messageTypeShift)
+	buf[currentPosition] |= byte((h.MessageType << messageTypeShift))
 
 	// The seventh bit is the encrypted bit
 	buf[currentPosition] |= (h.Encrypted << encryptedShift)
