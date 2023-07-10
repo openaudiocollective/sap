@@ -15,14 +15,14 @@ func TestPacketMarshalSize(t *testing.T) {
 		{
 			name:       "Test 1: Without Payload",
 			mockPacket: CreateMockPacket(Packet{}),
-			want:       9,
+			want:       8,
 		},
 		{
 			name: "Test 2: With Payload",
 			mockPacket: CreateMockPacket(Packet{
 				Payload: []byte{0x10, 0x04},
 			}),
-			want: 11,
+			want: 10,
 		},
 	}
 
@@ -46,6 +46,11 @@ func TestPacketUnmarshalErrors(t *testing.T) {
 			name:          "BufTooSmallForFlags",
 			input:         make([]byte, 0), // Not enough bytes to unmarshal flags.
 			expectedError: errBufTooSmallForFlags,
+		},
+		{
+			name:          "BufTooSmallForPayload",
+			input:         make([]byte, 8), // Not enough bytes to unmarshal flags.,
+			expectedError: errBufTooSmallForPayload,
 		},
 	}
 

@@ -3,6 +3,7 @@ package sap
 import (
 	"encoding/binary"
 	"io"
+	"mime"
 	"net"
 )
 
@@ -97,9 +98,12 @@ func (h Header) MarshalSize() int {
 		size += 16
 	}
 
-	// Payload Type
-	payloadTypeBytes := []byte(h.PayloadType) // Used to get how many bytes PayloadType have
-	size += len(payloadTypeBytes)
+	if h.PayloadType == "" {
+		// payloadType is omitted
+		return size
+	}
+
+	size += len([]byte(h.PayloadType))
 
 	// Trailing zero after the Payload Type
 	size++
@@ -108,7 +112,7 @@ func (h Header) MarshalSize() int {
 }
 
 // Unmarshal parses the passed byte slice and stores the result in the Header.
-func (h *Header) Unmarshal(buf []byte) error { //nolint:gocognit
+func (h *Header) Unmarshal(buf []byte) error {
 	/*
 	    0                   1                   2                   3
 	    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -202,12 +206,15 @@ func (h *Header) Unmarshal(buf []byte) error { //nolint:gocognit
 		}
 	}
 
-	// Trailing Byte
-	if len(buf[currentPosition:]) < 1 {
-		return errBufTooSmallForPayloadType
-	}
+	if len(buf[currentPosition:]) < 3 || (len(buf[currentPosition:]) >= 3 && string(buf[currentPosition:currentPosition+3]) == "v=0") {
+		// whether there's is no payload or the payload type has been omitted
+		// and we are already in the payload
+		h.PayloadType = ""
+	} else {
+		// either there is a payload type in the header
+		// or the payload type is "application/sdp" (implicit because it's omitted)
+		// and the payload itself is not SDP (because it doesn't start with "v=0")
 
-	if len(buf[currentPosition:]) > 1 {
 		i := 0
 		for ; i < len(buf[currentPosition:]); i++ {
 			if buf[currentPosition+i] == 0 { // looking for the trailing zero byte
@@ -215,24 +222,21 @@ func (h *Header) Unmarshal(buf []byte) error { //nolint:gocognit
 			}
 		}
 
-		if i+1 == len(buf[currentPosition:]) && buf[currentPosition+i] != 0 {
-			// we traversed the whole buffer but didnt find the trailing byte
+		if i == len(buf[currentPosition:]) && buf[currentPosition+(i-1)] != 0 {
+			// we traversed the whole buffer but didnt find a trailing byte
 			return errNoTrailingByteFound
+		}
+
+		mediaType, _, err := mime.ParseMediaType(string(buf[currentPosition : currentPosition+i])) // doesn't include the trailing zero
+		if err != nil {
+			// the string until the trailing zero is not a valid mime media type
+			// this indicates the payload type has been omitted (thus being application/sdp) and we are already in the payload
+			// since we already checked and the start of the payload is not "v=0", the payload is not of type "application/sdp"
+			return err
 		}
 
 		// Payload Type
-		h.PayloadType = string(buf[currentPosition : currentPosition+i]) // doesn't include the trailing zero
-
-	} else {
-		// In this case len(buf[currentPosition:]) == 1
-		if buf[currentPosition] == 0 { // looking for the trailing zero byte
-
-			// Payload Type
-			h.PayloadType = "" // the payload type can be omitted if its SDP
-
-		} else {
-			return errNoTrailingByteFound
-		}
+		h.PayloadType = mediaType
 	}
 
 	return nil
@@ -317,7 +321,7 @@ func (h Header) MarshalTo(buf []byte) (n int, err error) {
 		copy(buf[currentPosition:], h.OriginatingSource.To16())
 		currentPosition += 16
 	} else {
-		return n, errInvalidIPOnHeader
+		return 0, errInvalidIPOnHeader
 	}
 
 	// Authentication Data
@@ -327,16 +331,20 @@ func (h Header) MarshalTo(buf []byte) (n int, err error) {
 	}
 
 	// Payload Type
-	payloadTypeBytes := []byte(h.PayloadType)
-	for i := range payloadTypeBytes {
-		buf[currentPosition+i] = payloadTypeBytes[i]
+	if h.PayloadType != "" {
+		payloadTypeBytes := []byte(h.PayloadType)
+		for i := range payloadTypeBytes {
+			buf[currentPosition+i] = payloadTypeBytes[i]
+		}
+		currentPosition += len(payloadTypeBytes)
+
+		// Trailing zero after the Payload Type
+		buf[currentPosition] = 0
+		currentPosition++
 	}
-	currentPosition += len(payloadTypeBytes)
 
-	// Trailing zero after the Payload Type
-	buf[currentPosition] = 0
-	currentPosition++
-
+	// PayloadType has been omitted
+	// which indicates it is "application/sdp"
 	return currentPosition, nil
 }
 
